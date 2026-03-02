@@ -10,6 +10,8 @@ spi_device_handle_t st7789_init();
 void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len);
 void send_command(spi_device_handle_t dev_handle, const uint8_t command);
 void st7789_wakeup(spi_device_handle_t dev_handle);
+void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width, uint16_t colour);
 
 spi_device_handle_t st7789_init() {
     spi_bus_config_t bus_conf = {
@@ -28,7 +30,7 @@ spi_device_handle_t st7789_init() {
     }
     spi_device_interface_config_t spi_conf={
         .clock_source=SPI_CLK_SRC_APB,
-        .clock_speed_hz=25000000,
+        .clock_speed_hz=200000,
         .duty_cycle_pos=127,
         .mode=0,
         .command_bits=0,
@@ -102,4 +104,27 @@ void st7789_wakeup(spi_device_handle_t dev_handle) {
     temp = 0x00;
     send_data(dev_handle,&temp, 1);
     send_command(dev_handle,0x29); //display on
+}
+void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye) {
+    send_command(dev_handle, 0x2A);
+    uint8_t temp[4]={xs>>8, xs, xe>>8, xe};
+    send_data(dev_handle,temp,4);
+    send_command(dev_handle, 0x2B);
+    temp[0]=ys>>8, temp[1]=ys, temp[2]=ye>>8, temp[3]=ye;
+    send_data(dev_handle,temp,4);
+    send_command(dev_handle, 0x2C);
+}
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width, uint16_t colour) {
+    if (x>=320) x=319;
+    if (y>=240) y=239;
+    if ((x+width)>320) {
+        width=320, width-=x;
+    }
+    if ((y+height) >240) {
+        height=240, height -=y;
+    }
+    st7789_set_window(dev_handle, x,x + width-1, y, y + height-1);
+    uint32_t tot_pixels = width*height;
+    uint8_t rgb_16[2]={colour>>8, colour};
+    for (uint32_t i=0; i<tot_pixels; i++) send_data(dev_handle,rgb_16, 2);
 }

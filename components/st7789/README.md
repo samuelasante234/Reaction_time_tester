@@ -29,6 +29,8 @@ Transmits a single 8-bit command to the display. Automatically pulls the D/C pin
 ### `void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len_bytes)`
 Transmits an array of data bytes to the display. Automatically pulls the D/C pin HIGH via the pre-transmission callback.
 
-## Pending Implementation (TODO)
-- [ ] Column/Row Address Set (The Drawing Window)
-- [ ] Framebuffer / Color array transmission
+### `void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye)`
+Receives the start and end coordinates of the area to paint. Transmits the coordinates to `CASET` and `RASET` respectively to set up the window. Uses `RAMWR` to start painting.
+
+### `void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width, uint16_t colour)`
+Simplifies the math by just asking for start and region to draw. Calculates the start and end coordinates and passes to `st7789_set_window`. Paints every pixel in the defined region with `colour`.
