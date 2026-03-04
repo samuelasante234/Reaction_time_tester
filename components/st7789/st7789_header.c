@@ -4,11 +4,13 @@
 #include "esp_rom_sys.h"
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
+#include "esp_cache.h"
 
 static void IRAM_ATTR ISR(void *arg);
 spi_device_handle_t st7789_init();
 void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len);
 void send_command(spi_device_handle_t dev_handle, const uint8_t command);
+void send_pixels(spi_device_handle_t dev_handle, uint16_t colour, uint32_t len);
 void st7789_wakeup(spi_device_handle_t dev_handle);
 void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
 void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width, uint16_t colour);
@@ -21,8 +23,9 @@ spi_device_handle_t st7789_init() {
         .quadhd_io_num=-1,
         .quadwp_io_num=-1,
         .intr_flags=0,
+        .max_transfer_sz=153600*2,
     };
-    esp_err_t output = spi_bus_initialize(SPI_CHAN, &bus_conf, SPI_DMA_DISABLED);
+    esp_err_t output = spi_bus_initialize(SPI_CHAN, &bus_conf, SPI_DMA_CH_AUTO);
     if (output!=ESP_OK) {
         printf("Couldn't initialise bus. Error: %s\n", esp_err_to_name(output));
         fflush(stdout);
@@ -83,6 +86,27 @@ void send_command(spi_device_handle_t dev_handle, const uint8_t command) {
         return;
     }
 }
+void send_pixels(spi_device_handle_t dev_handle, uint16_t colour, uint32_t len) {
+    spi_transaction_t transact_t = {0};
+    static uint16_t *head =NULL;
+    if (!head) {head = (uint16_t *)spi_bus_dma_memory_alloc(SPI_CHAN, (uint32_t)153600*2,MALLOC_CAP_SPIRAM);}
+    for (uint32_t i=0; i<len;i++) {
+        *(head +i) = (colour<<8) | (colour >> 8);
+    }
+    esp_err_t result = esp_cache_msync((void*)head,len*2,ESP_CACHE_MSYNC_FLAG_DIR_C2M | ESP_CACHE_MSYNC_FLAG_TYPE_DATA);
+    if (result != ESP_OK) {
+        printf("Couldn't sync! Error: %s\n", esp_err_to_name(result));
+        fflush(stdout);
+        return;
+    }
+    transact_t.tx_buffer= head; transact_t.length=len*8*2; transact_t.user = (void*)1;
+    result = spi_device_transmit(dev_handle,&transact_t);
+    if (result != ESP_OK) {
+        printf("Couldn't transmit pixels! Error: %s\n", esp_err_to_name(result));
+        fflush(stdout);
+        return;
+    }
+}
 void st7789_wakeup(spi_device_handle_t dev_handle) {
     volatile uint32_t *Overhead_set = (volatile uint32_t *) GPIO_OUT_W1TS_REG;
     volatile uint32_t *Overhead_clear = (volatile uint32_t *) GPIO_OUT_W1TC_REG;
@@ -124,7 +148,5 @@ void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, ui
         height=240, height -=y;
     }
     st7789_set_window(dev_handle, x,x + width-1, y, y + height-1);
-    uint32_t tot_pixels = width*height;
-    uint8_t rgb_16[2]={colour>>8, colour};
-    for (uint32_t i=0; i<tot_pixels; i++) send_data(dev_handle,rgb_16, 2);
+    send_pixels(dev_handle,colour,width*height);
 }

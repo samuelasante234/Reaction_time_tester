@@ -26,6 +26,9 @@ Executes the strict hardware reset and software initialization sequence.
 ### `void send_command(spi_device_handle_t dev_handle, const uint8_t command)`
 Transmits a single 8-bit command to the display. Automatically pulls the D/C pin LOW via the pre-transmission callback.
 
+### `void send_pixels(spi_device_handle_t dev_handle, uint16_t colour, uint32_t len)`
+Transmits data in bursts using DMA. Automatically pulls the D/C pin HIGH via the pre-transmission callback.
+
 ### `void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len_bytes)`
 Transmits an array of data bytes to the display. Automatically pulls the D/C pin HIGH via the pre-transmission callback.
 

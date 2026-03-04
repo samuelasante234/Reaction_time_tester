@@ -14,6 +14,7 @@
 spi_device_handle_t st7789_init();
 void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len);
 void send_command(spi_device_handle_t dev_handle, const uint8_t command);
+void send_pixels(spi_device_handle_t dev_handle, uint16_t colour, uint32_t len);
 void st7789_wakeup(spi_device_handle_t dev_handle);
 void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
 void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width, uint16_t colour);
