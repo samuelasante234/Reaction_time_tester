@@ -10,10 +10,10 @@ static void IRAM_ATTR ISR(void *arg);
 spi_device_handle_t st7789_init();
 void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len);
 void send_command(spi_device_handle_t dev_handle, const uint8_t command);
-void send_pixels(spi_device_handle_t dev_handle, uint16_t colour, uint32_t len);
+void send_pixels(spi_device_handle_t dev_handle, uint16_t *colour, uint32_t len);
 void st7789_wakeup(spi_device_handle_t dev_handle);
 void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
-void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width, uint16_t colour);
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width);
 
 spi_device_handle_t st7789_init() {
     spi_bus_config_t bus_conf = {
@@ -86,12 +86,12 @@ void send_command(spi_device_handle_t dev_handle, const uint8_t command) {
         return;
     }
 }
-void send_pixels(spi_device_handle_t dev_handle, uint16_t colour, uint32_t len) {
+void send_pixels(spi_device_handle_t dev_handle, uint16_t* colour, uint32_t len) {
     spi_transaction_t transact_t = {0};
     static uint16_t *head =NULL;
     if (!head) {head = (uint16_t *)spi_bus_dma_memory_alloc(SPI_CHAN, (uint32_t)153600*2,MALLOC_CAP_SPIRAM);}
     for (uint32_t i=0; i<len;i++) {
-        *(head +i) = (colour<<8) | (colour >> 8);
+        *(head +i) = *(colour+i)<<8 | *(colour+i) >> 8;
     }
     esp_err_t result = esp_cache_msync((void*)head,len*2,ESP_CACHE_MSYNC_FLAG_DIR_C2M | ESP_CACHE_MSYNC_FLAG_TYPE_DATA);
     if (result != ESP_OK) {
@@ -138,7 +138,7 @@ void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe,
     send_data(dev_handle,temp,4);
     send_command(dev_handle, 0x2C);
 }
-void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width, uint16_t colour) {
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width) {
     if (x>=320) x=319;
     if (y>=240) y=239;
     if ((x+width)>320) {
@@ -148,5 +148,4 @@ void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, ui
         height=240, height -=y;
     }
     st7789_set_window(dev_handle, x,x + width-1, y, y + height-1);
-    send_pixels(dev_handle,colour,width*height);
 }

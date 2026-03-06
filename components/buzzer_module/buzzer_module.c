@@ -1,9 +1,9 @@
 #include "buzzer_module.h"
 #include "driver/ledc.h"
-#include "stdbool.h"
+#include <stdbool.h>
 
 void buzzer_init();
-void buzzer_resume();
+void buzzer_resume(bool *state);
 void buzzer_pause();
 
 void buzzer_init() {
