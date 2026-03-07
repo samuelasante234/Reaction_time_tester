@@ -10,6 +10,7 @@
 volatile DRAM_ATTR States fsm_states;
 void app_main(void)
 {
+    buzzer_init();
     gpio_init();
     volatile int i=3;
     gptimer_handle_t timer_handle = timer1_handle();
@@ -21,27 +22,27 @@ void app_main(void)
                 st7789_wakeup(st7789_handle);
                 fsm_states=WELCOME_STATE;
             case WELCOME_STATE:
-                draw_characters(st7789_handle,"Welcome to this game!",20, 50, 10, 8, 100);
+                draw_characters(st7789_handle,"Welcome to this game!",20, 50, 10);
                 fsm_states=TRIGGER_STATE;
             case TRIGGER_STATE:
-                draw_characters(st7789_handle, "Game start!",11,100, 10,8, 100);
+                draw_characters(st7789_handle, "Game start!",11,100, 10);
                 gpio_set_level(LED_PIN,1);
                 fsm_states=NOTHING_STATE;
             case DISQUALIFIED_1_STATE:
-                draw_characters(st7789_handle, "Player 1 disqualified",21,100,10,8,100);
+                draw_characters(st7789_handle, "Player 1 disqualified",21,100,10);
                 gpio_set_level(LED_PIN,0);
                 fsm_states=NOTHING_STATE;
             case DISQUALIFIED_2_STATE:
-                draw_characters(st7789_handle, "Player 2 disqualified",21,100,10,8,100);
+                draw_characters(st7789_handle, "Player 2 disqualified",21,100,10);
                 gpio_set_level(LED_PIN,0);
                 fsm_states=NOTHING_STATE;
             case WINNER_1_STATE:
-                draw_characters(st7789_handle, "Player 1 wins",13,100,10,8,100);
+                draw_characters(st7789_handle, "Player 1 wins",13,100,10);
                 gpio_set_level(LED_PIN, 0);
                 buzzer_pause();
                 fsm_states=NOTHING_STATE;
             case WINNER_2_STATE:
-                draw_characters(st7789_handle, "Player 2 wins",13,100,10,8,100);
+                draw_characters(st7789_handle, "Player 2 wins",13,100,10);
                 gpio_set_level(LED_PIN, 0);
                 buzzer_pause();
                 fsm_states=NOTHING_STATE;

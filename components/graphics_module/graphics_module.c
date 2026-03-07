@@ -4,11 +4,11 @@
 #include "stdint.h"
 #include "font_module.h"
 
-uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters);
-int get_index(int i, int num_of_chars);
-void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int no_of_characters, int x, int y,int height, int width);
+static uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters);
+static int get_index(int i, int num_of_chars);
+void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int no_of_characters, int x, int y);
 
-uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters) {
+static uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters) {
     static uint16_t *Overhead = NULL;
     if(!Overhead) Overhead = (uint16_t*)heap_caps_malloc((uint32_t)(240*320*2),MALLOC_CAP_SPIRAM);
     if (!Overhead) {
@@ -23,11 +23,11 @@ uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters) {
     }
     return Overhead;
 }
-int get_index(int i, int num_of_chars) {
+static int get_index(int i, int num_of_chars) {
     int row = i/num_of_chars, column=i%num_of_chars;
     return 8*column + row;
 }
-void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int no_of_characters, int x, int y,int height, int width) {
+void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int no_of_characters, int x, int y) {
     uint8_t converted_text[8*no_of_characters];
     for (int i=0; i<no_of_characters;i++) {
         for (int k=0; k<(8); k++) {
@@ -40,6 +40,6 @@ void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int 
         fflush(stdout);
         return;
     }
-    st7789_fill_area(dev_handle,x,y,height,width);
+    st7789_fill_area(dev_handle,x,y,no_of_characters);
     send_pixels(dev_handle,ptr_to_text,64*(uint32_t)no_of_characters);
 }

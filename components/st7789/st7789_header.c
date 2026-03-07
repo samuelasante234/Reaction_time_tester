@@ -8,12 +8,12 @@
 
 static void IRAM_ATTR ISR(void *arg);
 spi_device_handle_t st7789_init();
-void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len);
-void send_command(spi_device_handle_t dev_handle, const uint8_t command);
+static void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len);
+static void send_command(spi_device_handle_t dev_handle, const uint8_t command);
 void send_pixels(spi_device_handle_t dev_handle, uint16_t *colour, uint32_t len);
 void st7789_wakeup(spi_device_handle_t dev_handle);
-void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
-void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width);
+static void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, int no_of_characters);
 
 spi_device_handle_t st7789_init() {
     spi_bus_config_t bus_conf = {
@@ -66,7 +66,7 @@ static void IRAM_ATTR ISR(void *arg)  {
         *Overhead = 1<<DC_PIN;
     }
 }
-void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len_bytes) {
+static void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len_bytes) {
     spi_transaction_t transact_t = {0};
     transact_t.length=len_bytes*8; transact_t.tx_buffer=data; transact_t.user=(void*)1;
     esp_err_t result = spi_device_polling_transmit(dev_handle,&transact_t);
@@ -76,7 +76,7 @@ void send_data(spi_device_handle_t dev_handle, const uint8_t* data, int len_byte
         return;
     }
 }
-void send_command(spi_device_handle_t dev_handle, const uint8_t command) {
+static void send_command(spi_device_handle_t dev_handle, const uint8_t command) {
     spi_transaction_t transact_t ={0};
     transact_t.length=8; transact_t.tx_buffer=&command; transact_t.user=(void*)0;
     esp_err_t result = spi_device_polling_transmit(dev_handle, &transact_t);
@@ -129,7 +129,7 @@ void st7789_wakeup(spi_device_handle_t dev_handle) {
     send_data(dev_handle,&temp, 1);
     send_command(dev_handle,0x29); //display on
 }
-void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye) {
+static void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye) {
     send_command(dev_handle, 0x2A);
     uint8_t temp[4]={xs>>8, xs, xe>>8, xe};
     send_data(dev_handle,temp,4);
@@ -138,9 +138,10 @@ void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe,
     send_data(dev_handle,temp,4);
     send_command(dev_handle, 0x2C);
 }
-void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, uint16_t height, uint16_t width) {
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, int no_of_characters) {
     if (x>=320) x=319;
     if (y>=240) y=239;
+    uint16_t width=8*(no_of_characters), height=8;
     if ((x+width)>320) {
         width=320, width-=x;
     }
