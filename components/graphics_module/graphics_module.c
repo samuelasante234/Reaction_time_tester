@@ -10,7 +10,7 @@ void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int 
 
 static uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters) {
     static uint16_t *Overhead = NULL;
-    if(!Overhead) Overhead = (uint16_t*)heap_caps_malloc((uint32_t)(240*320*2),MALLOC_CAP_SPIRAM);
+    if(!Overhead) Overhead = (uint16_t*)heap_caps_aligned_calloc(64, 1,(uint32_t)(240*320*2),MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
     if (!Overhead) {
         return NULL;
     }

@@ -89,7 +89,8 @@ static void send_command(spi_device_handle_t dev_handle, const uint8_t command) 
 void send_pixels(spi_device_handle_t dev_handle, uint16_t* colour, uint32_t len) {
     spi_transaction_t transact_t = {0};
     static uint16_t *head =NULL;
-    if (!head) {head = (uint16_t *)spi_bus_dma_memory_alloc(SPI_CHAN, (uint32_t)153600*2,MALLOC_CAP_SPIRAM);}
+    if (!head) {head = (uint16_t *)heap_caps_aligned_calloc(64,1,(uint32_t)153600*2,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);}
+    if (!head) {printf("Couldn't allocate dma buffer"); fflush(stdout); return;}
     for (uint32_t i=0; i<len;i++) {
         *(head +i) = *(colour+i)<<8 | *(colour+i) >> 8;
     }

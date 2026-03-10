@@ -9,7 +9,7 @@
 #define CS_PIN 10
 #define SPI_CHAN SPI2_HOST
 #define DC_PIN 4
-#define RES_PIN 5
+#define RES_PIN 6
 
 spi_device_handle_t st7789_init();
 void send_pixels(spi_device_handle_t dev_handle, uint16_t *colour, uint32_t len);

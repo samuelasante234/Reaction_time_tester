@@ -3,7 +3,7 @@
 
 #define BUZZER_NUM 5
 #define BUZZER_CHAN 0
-#define LEDC_SPEED_MODE LEDC_SPEED_MODE_MAX
+#define LEDC_SPEED_MODE LEDC_LOW_SPEED_MODE
 #define TIMER_NUM 0
 
 #include <stdbool.h>
