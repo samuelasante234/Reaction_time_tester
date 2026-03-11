@@ -6,10 +6,9 @@
 #define LEDC_SPEED_MODE LEDC_LOW_SPEED_MODE
 #define TIMER_NUM 0
 
-#include <stdbool.h>
-
 void buzzer_init();
-void buzzer_resume();
+void buzzer_resume_winner();
+void buzzer_resume_disqualified();
 void buzzer_pause();
 
 #endif

@@ -6,6 +6,10 @@
 
 void gpio_init();
 void interrupts_init(States *fsm_state);
+void disable_interrupt_1();
+void disable_interrupt_2();
+void enable_interrupt_1();
+void enable_interrupt_2();
 static void IRAM_ATTR IRS_BUTTON_1(void *arg);
 static void IRAM_ATTR IRS_BUTTON_2(void *arg);
 static DRAM_ATTR bool err_debug_variable;
@@ -44,6 +48,38 @@ void interrupts_init(States *fsm_state) {
     gpio_isr_handler_add(BUTTON_1_PIN, IRS_BUTTON_1, fsm_state);
     gpio_isr_handler_add(BUTTON_2_PIN, IRS_BUTTON_2, fsm_state);
 }
+void disable_interrupt_1() {
+    esp_err_t result = gpio_intr_disable(BUTTON_1_PIN);
+    if (result != ESP_OK) {
+        printf("Couldn't disable interrupt on button 1! Error: %s\n",esp_err_to_name(result));
+        fflush(stdout);
+        return;
+    }
+}
+void disable_interrupt_2() {
+    esp_err_t result = gpio_intr_disable(BUTTON_2_PIN);
+    if (result != ESP_OK) {
+        printf("Couldn't disable interrupt on button 2! Error: %s\n",esp_err_to_name(result));
+        fflush(stdout);
+        return;
+    }
+}
+void enable_interrupt_1() {
+    esp_err_t result = gpio_intr_enable(BUTTON_1_PIN);
+    if (result != ESP_OK) {
+        printf("Couldn't enable interrupt on button 1! Error: %s\n",esp_err_to_name(result));
+        fflush(stdout);
+        return;
+    }
+}
+void enable_interrupt_2() {
+    esp_err_t result = gpio_intr_enable(BUTTON_2_PIN);
+    if (result != ESP_OK) {
+        printf("Couldn't enable interrupt on button 2! Error: %s\n",esp_err_to_name(result));
+        fflush(stdout);
+        return;
+    }
+}
 
 static void IRAM_ATTR IRS_BUTTON_1(void *arg) {
     static int64_t initial=0;
@@ -52,6 +88,10 @@ static void IRAM_ATTR IRS_BUTTON_1(void *arg) {
     esp_err_t result = gpio_intr_disable(BUTTON_2_PIN);
     if (result != ESP_OK) return;
     volatile States *s = (volatile States*) arg;
+    if (*s == GAME_END_STATE) {
+        *s = WELCOME_STATE;
+        return;
+    }
     if (gpio_get_level(LED_PIN)) {
         *s = WINNER_1_STATE;
     }
@@ -69,6 +109,10 @@ static void IRAM_ATTR IRS_BUTTON_2(void *arg) {
     esp_err_t result = gpio_intr_disable(BUTTON_1_PIN);
     if (result != ESP_OK) return;    
     volatile States *s = (volatile States*) arg;
+    if (*s == GAME_END_STATE) {
+        *s = WELCOME_STATE;
+        return;
+    }
     if (gpio_get_level(LED_PIN)) {
         *s = WINNER_2_STATE;
     }

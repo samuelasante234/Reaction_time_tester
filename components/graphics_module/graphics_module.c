@@ -3,10 +3,11 @@
 #include "esp_heap_caps.h"
 #include "stdint.h"
 #include "font_module.h"
+#include <string.h>
 
 static uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters);
 static int get_index(int i, int num_of_chars);
-void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int no_of_characters, int x, int y);
+void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int x, int y);
 
 static uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters) {
     static uint16_t *Overhead = NULL;
@@ -27,7 +28,8 @@ static int get_index(int i, int num_of_chars) {
     int row = i/num_of_chars, column=i%num_of_chars;
     return 8*column + row;
 }
-void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int no_of_characters, int x, int y) {
+void draw_characters(spi_device_handle_t dev_handle, const char* user_text, int x, int y) {
+    int no_of_characters = strlen(user_text);
     uint8_t converted_text[8*no_of_characters];
     for (int i=0; i<no_of_characters;i++) {
         for (int k=0; k<(8); k++) {

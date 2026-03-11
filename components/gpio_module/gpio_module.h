@@ -18,5 +18,9 @@ typedef enum {
 
 void gpio_init();
 void interrupts_init(States *fsm_state);
+void disable_interrupt_1();
+void disable_interrupt_2();
+void enable_interrupt_1();
+void enable_interrupt_2();
 
 #endif

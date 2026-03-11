@@ -24,39 +24,42 @@ void app_main(void)
                 fsm_states=WELCOME_STATE;
                 break;
             case WELCOME_STATE:
-                draw_characters(st7789_handle,"Welcome to this game!",20, 50, 10);
-                draw_characters(st7789_handle, "Rules of the game!", 18,50,10);
+                player1_score=0,player2_score=0;
+                draw_characters(st7789_handle,"NEW GAME!",50, 10);
+                draw_characters(st7789_handle, "Rules of the game!",50,10);
                 fsm_states=TRIGGER_STATE;
                 break;
             case TRIGGER_STATE:
                 buzzer_pause();
-                draw_characters(st7789_handle, "Game start!",11,100, 10);
+                int dummy=round_count+1;
+                char *text = "Round "+dummy;
+                draw_characters(st7789_handle, "Game start!",100, 10);
                 gpio_set_level(LED_PIN,1);
                 fsm_states=NOTHING_STATE;
                 break;
             case DISQUALIFIED_1_STATE:
                 buzzer_resume_disqualified();
-                draw_characters(st7789_handle, "Player 1 disqualified",21,100,10);
+                draw_characters(st7789_handle, "Player 1 disqualified",100,10);
                 vTaskDelay(2000);
                 gpio_set_level(LED_PIN,0);
                 buzzer_pause();
                 round_count =0;
-                player1_score=0,player2_score=0;
-                fsm_states=NOTHING_STATE;
+                player1_score=0,player2_score=5;
+                fsm_states=GAME_END_STATE;
                 break;
             case DISQUALIFIED_2_STATE:
                 buzzer_resume_disqualified();
-                draw_characters(st7789_handle, "Player 2 disqualified",21,100,10);
+                draw_characters(st7789_handle, "Player 2 disqualified",100,10);
                 vTaskDelay(2000);
                 gpio_set_level(LED_PIN,0);
                 buzzer_pause();
                 round_count=0;
-                player2_score=0,player1_score=0;
-                fsm_states=NOTHING_STATE;
+                player1_score=5,player2_score=0;
+                fsm_states=GAME_END_STATE;
                 break;
             case WINNER_1_STATE:
                 buzzer_resume_winner();
-                draw_characters(st7789_handle, "Player 1 wins",13,100,10);
+                draw_characters(st7789_handle, "Player 1 wins",100,10);
                 vTaskDelay(2000);
                 gpio_set_level(LED_PIN, 0);
                 buzzer_pause();
@@ -67,7 +70,7 @@ void app_main(void)
                 break;
             case WINNER_2_STATE:
                 buzzer_resume_winner();
-                draw_characters(st7789_handle, "Player 2 wins",13,100,10);
+                draw_characters(st7789_handle, "Player 2 wins",100,10);
                 vTaskDelay(2000);
                 gpio_set_level(LED_PIN, 0);
                 buzzer_pause();
@@ -80,11 +83,10 @@ void app_main(void)
                 i%=3;
                 break;
             case GAME_END_STATE:
-                draw_characters(st7789_handle, "Game end!",9,100,10);
-                draw_characters(st7789_handle,"Final scores!",13,100,10);
-                draw_characters(st7789_handle, "Press any button to play new game!", 34, 20, 20);
-                
-            
+                draw_characters(st7789_handle, "Game end!",100,10);
+                draw_characters(st7789_handle,"Final scores!",100,20);
+                draw_characters(st7789_handle, "Press any button to play new game!", 20, 30);
+                break;
         }
         vTaskDelay(100);
     }
