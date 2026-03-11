@@ -1,5 +1,5 @@
 idf_component_register(
     SRCS "gpio_module.c"
     INCLUDE_DIRS "."
-    REQUIRES driver buzzer_module
+    REQUIRES driver buzzer_module esp_timer
 )
