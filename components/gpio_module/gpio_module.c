@@ -90,6 +90,7 @@ static void IRAM_ATTR IRS_BUTTON_1(void *arg) {
     volatile States *s = (volatile States*) arg;
     if (*s == GAME_END_STATE) {
         *s = WELCOME_STATE;
+        initial=final;
         return;
     }
     if (gpio_get_level(LED_PIN)) {
@@ -111,6 +112,7 @@ static void IRAM_ATTR IRS_BUTTON_2(void *arg) {
     volatile States *s = (volatile States*) arg;
     if (*s == GAME_END_STATE) {
         *s = WELCOME_STATE;
+        initial=final;
         return;
     }
     if (gpio_get_level(LED_PIN)) {
