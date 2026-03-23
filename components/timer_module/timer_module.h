@@ -4,6 +4,9 @@
 #include "driver/gptimer.h"
 #include "driver/ledc.h"
 
-gptimer_handle_t timer1_handle();
+extern gptimer_handle_t timer1_handle();
+void timer_start(gptimer_handle_t timer_handle);
+void timer_stop(gptimer_handle_t timer_handle);
+uint16_t get_time(gptimer_handle_t timer_handle);
 
 #endif

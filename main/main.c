@@ -18,6 +18,7 @@ void app_main(void)
     vTaskDelay(2000);
     int round_count=0, player1_score=0, player2_score=0;
     interrupts_init(&fsm_states);
+    fsm_states=IDLE_STATE;
     while (1) {
         switch(fsm_states) {
             case IDLE_STATE:
