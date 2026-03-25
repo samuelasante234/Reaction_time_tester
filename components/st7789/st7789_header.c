@@ -33,9 +33,9 @@ spi_device_handle_t st7789_init() {
     }
     spi_device_interface_config_t spi_conf={
         .clock_source=SPI_CLK_SRC_APB,
-        .clock_speed_hz=200000,
+        .clock_speed_hz=25000000,
         .duty_cycle_pos=127,
-        .mode=0,
+        .mode=3,
         .command_bits=0,
         .address_bits=0,
         .dummy_bits=0,
@@ -109,13 +109,15 @@ void send_pixels(spi_device_handle_t dev_handle, uint16_t* colour, uint32_t len)
     }
 }
 void st7789_wakeup(spi_device_handle_t dev_handle) {
+    gpio_set_direction(RES_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(DC_PIN, GPIO_MODE_OUTPUT);
     volatile uint32_t *Overhead_set = (volatile uint32_t *) GPIO_OUT_W1TS_REG;
     volatile uint32_t *Overhead_clear = (volatile uint32_t *) GPIO_OUT_W1TC_REG;
     *Overhead_set = 1<<RES_PIN;
-    gpio_set_direction(RES_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction(DC_PIN, GPIO_MODE_OUTPUT);
+    vTaskDelay(10);
     *Overhead_clear = 1<<RES_PIN;
-    esp_rom_delay_us(14);
+    vTaskDelay(50);
+    //esp_rom_delay_us(14);
     *Overhead_set=1<<RES_PIN;
     vTaskDelay(120);
     send_command(dev_handle, 0x01); //software reset

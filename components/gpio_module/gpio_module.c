@@ -36,12 +36,6 @@ void gpio_init() {
         .intr_type=GPIO_INTR_POSEDGE,
     };
     gpio_config(&button2_pin_conf);
-    esp_err_t result = esp_timer_init();
-    if (result != ESP_OK) {
-        printf("Couldn't initialise timer! Error: %s\n", esp_err_to_name(result));
-        fflush(stdout);
-        return;
-    }
 }
 void interrupts_init(States *fsm_state) {
     gpio_install_isr_service(ESP_INTR_FLAG_LOWMED|ESP_INTR_FLAG_EDGE|ESP_INTR_FLAG_IRAM);

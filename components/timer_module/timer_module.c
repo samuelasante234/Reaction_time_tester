@@ -10,7 +10,7 @@ gptimer_handle_t timer1_handle() {
         .clk_src=GPTIMER_CLK_SRC_APB,
         .direction=GPTIMER_COUNT_UP,
         .intr_priority=0,
-        .resolution_hz=1000,
+        .resolution_hz=1000000,
     };
     gptimer_handle_t gptimer_handle;
     esp_err_t result = gptimer_new_timer(&timer_conf, &gptimer_handle);
@@ -19,11 +19,11 @@ gptimer_handle_t timer1_handle() {
         fflush(stdout);
         return NULL;
     }
-    esp_err_t result = gptimer_enable(gptimer_handle);
+    result = gptimer_enable(gptimer_handle);
         if (result != ESP_OK) {
             printf("Couldn't enable timer! Error: %s\n",esp_err_to_name(result));
             fflush(stdout);
-            return;
+            return NULL;
         }
     return gptimer_handle;
 }
