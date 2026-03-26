@@ -6,6 +6,8 @@
 #include "timer_module.h"
 #include "fsm_states_handler.h"
 
+#define MAX_DEBOUNCE_TIME 20000
+
 void gpio_init();
 void interrupts_init(States *fsm_state);
 void disable_interrupt_1();
@@ -63,7 +65,7 @@ void disable_interrupt_2() {
 void enable_interrupt_1() {
     esp_err_t result = gpio_intr_enable(BUTTON_1_PIN);
     if (result != ESP_OK) {
-        printf("Couldn't enable interrupt on button 1! Error: %s\n",esp_err_to_name(result));
+        printf("Couldn't enable interrupt on button 1! Error: %current_state\n",esp_err_to_name(result));
         fflush(stdout);
         return;
     }
@@ -71,7 +73,7 @@ void enable_interrupt_1() {
 void enable_interrupt_2() {
     esp_err_t result = gpio_intr_enable(BUTTON_2_PIN);
     if (result != ESP_OK) {
-        printf("Couldn't enable interrupt on button 2! Error: %s\n",esp_err_to_name(result));
+        printf("Couldn't enable interrupt on button 2! Error: %current_state\n",esp_err_to_name(result));
         fflush(stdout);
         return;
     }
@@ -80,31 +82,30 @@ void enable_interrupt_2() {
 static void IRAM_ATTR IRS_BUTTON_1(void *arg) {
     static int64_t initial=0;
     int64_t final = esp_timer_get_time();
-    if ((final-initial)<20000) return;
+    if ((final-initial)<MAX_DEBOUNCE_TIME) return;
     esp_err_t result = gpio_intr_disable(BUTTON_2_PIN);
     if (result != ESP_OK) return;
-    volatile States *s = (volatile States*) arg;
-    if (*s == GAME_END_STATE) {
-        *s = WELCOME_STATE;
+    volatile States *current_state = (volatile States*) arg;
+    if (*current_state == NOTHING_STATE_3) {
+        *current_state = WELCOME_STATE;
         initial=final;
         return;
     }
-    if (*s == NOTHING_STATE) {
-        *s = TRIGGER_STATE;
+    if (*current_state == NOTHING_STATE) {
+        *current_state = TRIGGER_STATE;
         initial=final;
         return;
     }
-    if (*s == DISQUALIFIED_1_STATE) return;
-    if (*s == DISQUALIFIED_2_STATE) return;
-    if (*s == WINNER_1_STATE) return;
-    if (*s == WINNER_2_STATE) return;
+    if (*current_state == DISQUALIFIED_1_STATE) return;
+    if (*current_state == DISQUALIFIED_2_STATE) return;
+    if (*current_state == WINNER_1_STATE) return;
+    if (*current_state == WINNER_2_STATE) return;
     if (gpio_get_level(LED_PIN)) {
         timer_stop(timer_handle);
-        *s = WINNER_1_STATE;
+        *current_state = WINNER_1_STATE;
     }
     else {
-        timer_stop(timer_handle);
-        *s=DISQUALIFIED_1_STATE;
+        *current_state=DISQUALIFIED_1_STATE;
     }
     initial=final;
     result = gpio_intr_enable(BUTTON_2_PIN);
@@ -113,31 +114,30 @@ static void IRAM_ATTR IRS_BUTTON_1(void *arg) {
 static void IRAM_ATTR IRS_BUTTON_2(void *arg) {
     static int64_t initial=0;
     int64_t final=esp_timer_get_time();
-    if ((final-initial)<20000) return;
+    if ((final-initial)<MAX_DEBOUNCE_TIME) return;
     esp_err_t result = gpio_intr_disable(BUTTON_1_PIN);
     if (result != ESP_OK) return;    
-    volatile States *s = (volatile States*) arg;
-    if (*s == GAME_END_STATE) {
-        *s = WELCOME_STATE;
+    volatile States *current_state = (volatile States*) arg;
+    if (*current_state == NOTHING_STATE_3) {
+        *current_state = WELCOME_STATE;
         initial=final;
         return;
     }
-    if (*s == NOTHING_STATE) {
-        *s = TRIGGER_STATE;
+    if (*current_state == NOTHING_STATE) {
+        *current_state = TRIGGER_STATE;
         initial=final;
         return;
     }
-    if (*s == DISQUALIFIED_1_STATE) return;
-    if (*s == DISQUALIFIED_2_STATE) return;
-    if (*s == WINNER_1_STATE) return;
-    if (*s == WINNER_2_STATE) return;
+    if (*current_state == DISQUALIFIED_1_STATE) return;
+    if (*current_state == DISQUALIFIED_2_STATE) return;
+    if (*current_state == WINNER_1_STATE) return;
+    if (*current_state == WINNER_2_STATE) return;
     if (gpio_get_level(LED_PIN)) {
         timer_stop(timer_handle);
-        *s = WINNER_2_STATE;
+        *current_state = WINNER_2_STATE;
     }
     else {
-        timer_stop(timer_handle);
-        *s=DISQUALIFIED_2_STATE;
+        *current_state=DISQUALIFIED_2_STATE;
     }
     initial=final;
     result = gpio_intr_enable(BUTTON_1_PIN);

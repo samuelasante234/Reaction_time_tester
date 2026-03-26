@@ -1,6 +1,8 @@
 #ifndef TIMER_MODULE_H
 #define TIMER_MODULE_H
 
+#define TIMER_FREQUENCY 1000000
+
 #include "driver/gptimer.h"
 #include "driver/ledc.h"
 

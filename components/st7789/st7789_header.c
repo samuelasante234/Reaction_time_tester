@@ -14,7 +14,7 @@ static void send_command(spi_device_handle_t dev_handle, const uint8_t command);
 void send_pixels(spi_device_handle_t dev_handle, uint16_t *colour, uint32_t len);
 void st7789_wakeup(spi_device_handle_t dev_handle);
 static void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
-void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, int no_of_characters,bool is_whole_screen);
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, bool is_whole_screen);
 
 spi_device_handle_t st7789_init() {
     spi_bus_config_t bus_conf = {
@@ -24,7 +24,7 @@ spi_device_handle_t st7789_init() {
         .quadhd_io_num=-1,
         .quadwp_io_num=-1,
         .intr_flags=0,
-        .max_transfer_sz=153600*2,
+        .max_transfer_sz=MAX_TRANSFER_SIZE,
     };
     esp_err_t output = spi_bus_initialize(SPI_CHAN, &bus_conf, SPI_DMA_CH_AUTO);
     if (output!=ESP_OK) {
@@ -34,16 +34,16 @@ spi_device_handle_t st7789_init() {
     }
     spi_device_interface_config_t spi_conf={
         .clock_source=SPI_CLK_SRC_APB,
-        .clock_speed_hz=25000000,
-        .duty_cycle_pos=127,
-        .mode=3,
+        .clock_speed_hz=CLOCK_SPEED,
+        .duty_cycle_pos=DUTY_COUNT,
+        .mode=CPOL_CPHA,
         .command_bits=0,
         .address_bits=0,
         .dummy_bits=0,
         .queue_size=1,
         .spics_io_num=CS_PIN,
-        .cs_ena_pretrans=1,
-        .cs_ena_posttrans=1,
+        .cs_ena_pretrans=TCSS,
+        .cs_ena_posttrans=TCSH,
         .pre_cb=(transaction_cb_t) ISR,
     };
     spi_device_handle_t dev_handle;
@@ -90,7 +90,7 @@ static void send_command(spi_device_handle_t dev_handle, const uint8_t command) 
 void send_pixels(spi_device_handle_t dev_handle, uint16_t* colour, uint32_t len) {
     spi_transaction_t transact_t = {0};
     static uint16_t *head =NULL;
-    if (!head) {head = (uint16_t *)heap_caps_aligned_calloc(64,1,(uint32_t)115200*2,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);}
+    if (!head) {head = (uint16_t *)heap_caps_aligned_calloc(64,1,(uint32_t)MAX_TRANSFER_SIZE*2*2,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);}
     if (!head) {printf("Couldn't allocate dma buffer"); fflush(stdout); return;}
     for (uint32_t i=0; i<len;i++) {
         *(head +i) = *(colour+i)<<8 | *(colour+i) >> 8;
@@ -153,26 +153,20 @@ void st7789_wakeup(spi_device_handle_t dev_handle) {
     send_command(dev_handle,0x29); //display on
 }
 static void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye) {
-    send_command(dev_handle, 0x2A);
+    send_command(dev_handle, 0x2A); //CASET
     uint8_t temp[4]={xs>>8, xs, xe>>8, xe};
     send_data(dev_handle,temp,4);
-    send_command(dev_handle, 0x2B);
+    send_command(dev_handle, 0x2B); //RASET
     temp[0]=ys>>8, temp[1]=ys, temp[2]=ye>>8, temp[3]=ye;
     send_data(dev_handle,temp,4);
-    send_command(dev_handle, 0x2C);
+    send_command(dev_handle, 0x2C); //RAMWR
 }
-void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, int no_of_characters,bool is_whole_screen) {
-    //if (x>=320) x=319;
-    //if (y>=240) y=239;
-    uint16_t width=240, height;
-    if (is_whole_screen) height=240;
-    else height=16;
-    /*
-    if ((x+width)>320 && !(is_whole_screen)) {
-        width=320, width-=x;
-    }*/
-    if ((y+height) >240 && !(is_whole_screen)) {
-        height=240, height -=y;
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y,bool is_whole_screen) {
+    uint16_t width=SCREEN_WIDTH, height;
+    if (is_whole_screen) height=SCREEN_HEIGHT;
+    else height=FONT_HEIGHT;
+    if ((y+height) >SCREEN_HEIGHT && !(is_whole_screen)) {
+        height=SCREEN_HEIGHT, height -=y;
     }
     st7789_set_window(dev_handle, x,x + width-1, y, y + height-1);
 }

@@ -11,7 +11,7 @@ gptimer_handle_t timer1_handle() {
         .clk_src=GPTIMER_CLK_SRC_APB,
         .direction=GPTIMER_COUNT_UP,
         .intr_priority=0,
-        .resolution_hz=1000000,
+        .resolution_hz=TIMER_FREQUENCY,
     };
     gptimer_handle_t gptimer_handle;
     esp_err_t result = gptimer_new_timer(&timer_conf, &gptimer_handle);

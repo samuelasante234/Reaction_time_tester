@@ -1,25 +1,20 @@
-# ESP32-S3 Hardware Interrupt & GPIO Manager (`gpio_module.c`)
+# ESP32-S3 Hardware Interrupt & Context Manager (`gpio_module.c`)
 
 ## Overview
-This module handles the physical layer of the reaction game. It configures the General Purpose Input/Output (GPIO) pins and manages the time-critical Interrupt Service Routines (ISRs). By executing hardware-level logic, it completely decouples the game's physical inputs from the main application super-loop.
+This module handles the physical layer of the reaction game. It configures the GPIO pins and manages the time-critical Interrupt Service Routines (ISRs). By executing hardware-level logic, it completely decouples the game's physical inputs from the FreeRTOS scheduler.
 
-## Hardware Configuration (`gpio_init`)
-* **Pull-Down Resistors:** All input pins are configured with internal pull-down resistors (`pull_down_en = 1`) to prevent floating inputs and false triggers.
-* **Dual-Mode Output:** The `LED_PIN` is configured as `GPIO_MODE_INPUT_OUTPUT`. This allows the application to drive the LED high/low while simultaneously allowing the ISRs to read its current hardware state as a logic check.
-* **Positive Edge Triggering:** Button interrupts are configured to fire strictly on the `GPIO_INTR_POSEDGE` (the exact microsecond the signal transitions from LOW to HIGH).
-
-## Interrupt Architecture (`interrupts_init`)
-The ISR service is installed with the `ESP_INTR_FLAG_IRAM` flag. This is a critical RTOS optimization that forces the interrupt handlers to reside in the ESP32-S3's internal fast RAM rather than flash memory. This ensures microsecond latency and prevents fatal system crashes if an interrupt fires while the flash cache is disabled.
-
-
+## The Timestamp Architecture (Microsecond Debouncing)
+Mechanical buttons inherently "bounce," creating hundreds of false electrical signals in a single press. Instead of using blocking `vTaskDelay` debouncing (which crashes ISRs), this module uses the ESP32's internal 64-bit CPU cycle counter: `esp_timer_get_time()`.
+* It captures the exact microsecond the physical metal makes contact.
+* It compares the `final` time against a `static initial` time.
+* If the difference is less than `MAX_DEBOUNCE_TIME` (20,000 µs), it silently drops the ghost interrupt.
 
 ## The ISR Handlers (`IRS_BUTTON_1` & `IRS_BUTTON_2`)
-To enforce security and encapsulation, the handlers are declared `static` and kept hidden from the global scope. They are decorated with `IRAM_ATTR` to satisfy the memory allocation flags.
+To enforce security and optimize speed, the handlers are declared `static` and forced into `IRAM_ATTR`. This forces the compiled code into the chip's internal fast RAM, ensuring microsecond execution latency without waiting for external flash memory to wake up.
 
-### Logic Flow & Concurrency Control:
-1. **The Hardware Mutex:** The very first instruction in the ISR disables the opponent's interrupt pin (`gpio_intr_disable`). This absolutely prevents race conditions if both players press their buttons nearly simultaneously.
-2. **State Context:** The ISR casts the generic `void *arg` pointer back into the `volatile States` pointer, allowing direct, thread-safe mutation of the FSM state.
-3. **The Game Logic:** * It reads the physical electrical state of the `LED_PIN`.
-   * **If HIGH:** The reaction phase has started. The player wins. The FSM is updated to `WINNER_STATE`, and the hardware buzzer is triggered.
-   * **If LOW:** The tension phase is still active. The player jumped the gun. The FSM is updated to `DISQUALIFIED_STATE`.
-4. **Cleanup:** The opponent's interrupt is re-enabled before exiting the ISR to prepare the hardware for the next round.
+### Logic Flow & Concurrency Guardrails:
+1. **The Mutex:** The very first instruction disables the opponent's interrupt pin to mathematically prevent a tie condition.
+2. **State Context Passing:** The ISR casts the generic `void *arg` pointer back into the global `volatile States` pointer to safely mutate the game flow.
+3. **The Race Condition Guardrails:** Before applying any game logic, the ISR checks a series of `if (*current_state == ...)` conditions. This permanently locks out losing players from accidentally overwriting a `WINNER` or `DISQUALIFIED` state if they press their button a few milliseconds late.
+4. **The Trigger Logic:** * If `LED_PIN` is HIGH: Player wins.
+   * If `LED_PIN` is LOW: Player jumped the gun and is disqualified.

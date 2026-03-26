@@ -11,6 +11,7 @@ typedef enum {
     WINNER_2_STATE,
     NOTHING_STATE,
     NOTHING_STATE_2,
+    NOTHING_STATE_3,
     GAME_END_STATE,
 } States;
 #define LED_PIN 1
