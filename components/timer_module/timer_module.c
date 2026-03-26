@@ -1,4 +1,5 @@
 #include "timer_module.h"
+#include "esp_err.h"
 
 gptimer_handle_t timer1_handle();
 void timer_start(gptimer_handle_t timer_handle);
@@ -42,12 +43,7 @@ void timer_start(gptimer_handle_t timer_handle) {
     }
 }
 void timer_stop(gptimer_handle_t timer_handle) {
-    esp_err_t result = gptimer_stop(timer_handle);
-    if (result != ESP_OK) {
-        printf("Couldn't stop timer! Error: %s\n",esp_err_to_name(result));
-        fflush(stdout);
-        return;
-    }
+    ESP_ERROR_CHECK(gptimer_stop(timer_handle));
 }
 uint16_t get_time(gptimer_handle_t timer_handle) {
     uint64_t count;

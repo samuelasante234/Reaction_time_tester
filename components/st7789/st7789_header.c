@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "esp_cache.h"
+#include <stdbool.h>
 
 static void IRAM_ATTR ISR(void *arg);
 spi_device_handle_t st7789_init();
@@ -13,7 +14,7 @@ static void send_command(spi_device_handle_t dev_handle, const uint8_t command);
 void send_pixels(spi_device_handle_t dev_handle, uint16_t *colour, uint32_t len);
 void st7789_wakeup(spi_device_handle_t dev_handle);
 static void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye);
-void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, int no_of_characters);
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, int no_of_characters,bool is_whole_screen);
 
 spi_device_handle_t st7789_init() {
     spi_bus_config_t bus_conf = {
@@ -89,7 +90,7 @@ static void send_command(spi_device_handle_t dev_handle, const uint8_t command) 
 void send_pixels(spi_device_handle_t dev_handle, uint16_t* colour, uint32_t len) {
     spi_transaction_t transact_t = {0};
     static uint16_t *head =NULL;
-    if (!head) {head = (uint16_t *)heap_caps_aligned_calloc(64,1,(uint32_t)153600*2,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);}
+    if (!head) {head = (uint16_t *)heap_caps_aligned_calloc(64,1,(uint32_t)115200*2,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);}
     if (!head) {printf("Couldn't allocate dma buffer"); fflush(stdout); return;}
     for (uint32_t i=0; i<len;i++) {
         *(head +i) = *(colour+i)<<8 | *(colour+i) >> 8;
@@ -100,13 +101,32 @@ void send_pixels(spi_device_handle_t dev_handle, uint16_t* colour, uint32_t len)
         fflush(stdout);
         return;
     }
-    transact_t.tx_buffer= head; transact_t.length=len*8*2; transact_t.user = (void*)1;
-    result = spi_device_transmit(dev_handle,&transact_t);
-    if (result != ESP_OK) {
-        printf("Couldn't transmit pixels! Error: %s\n", esp_err_to_name(result));
-        fflush(stdout);
-        return;
+    uint16_t max_pixels = 16000; uint32_t pixels_sent=0;
+    while (pixels_sent<len) {
+        if (len-pixels_sent>max_pixels) {
+            transact_t.tx_buffer= head +pixels_sent; transact_t.length=max_pixels*8*2; transact_t.user = (void*)1;
+            transact_t.rxlength=0;
+            result = spi_device_transmit(dev_handle,&transact_t);
+            if (result != ESP_OK) {
+                printf("Couldn't transmit pixels! Error: %s\n", esp_err_to_name(result));
+                fflush(stdout);
+                return;
+            }
+            pixels_sent+=(max_pixels);
+        }
+        else {
+            transact_t.tx_buffer=head+pixels_sent; transact_t.length=(len-pixels_sent)*8*2; transact_t.user=(void*)1;
+            transact_t.rxlength=0;
+            result = spi_device_transmit(dev_handle,&transact_t);
+            if (result != ESP_OK) {
+                printf("Couldn't transmit pixels! Error: %s\n", esp_err_to_name(result));
+                fflush(stdout);
+                return;
+            }
+            pixels_sent+=(len-pixels_sent);
+        }
     }
+    
 }
 void st7789_wakeup(spi_device_handle_t dev_handle) {
     gpio_set_direction(RES_PIN, GPIO_MODE_OUTPUT);
@@ -141,14 +161,17 @@ static void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint1
     send_data(dev_handle,temp,4);
     send_command(dev_handle, 0x2C);
 }
-void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, int no_of_characters) {
-    if (x>=320) x=319;
-    if (y>=240) y=239;
-    uint16_t width=8*(no_of_characters), height=8;
-    if ((x+width)>320) {
+void st7789_fill_area(spi_device_handle_t dev_handle, uint16_t x, uint16_t y, int no_of_characters,bool is_whole_screen) {
+    //if (x>=320) x=319;
+    //if (y>=240) y=239;
+    uint16_t width=240, height;
+    if (is_whole_screen) height=240;
+    else height=16;
+    /*
+    if ((x+width)>320 && !(is_whole_screen)) {
         width=320, width-=x;
-    }
-    if ((y+height) >240) {
+    }*/
+    if ((y+height) >240 && !(is_whole_screen)) {
         height=240, height -=y;
     }
     st7789_set_window(dev_handle, x,x + width-1, y, y + height-1);

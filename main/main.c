@@ -12,7 +12,7 @@ void app_main(void)
 {
     buzzer_init();
     gpio_init();
-    volatile int i=3;
+    volatile int i=3,j=3;
     gptimer_handle_t timer_handle = timer1_handle();
     spi_device_handle_t st7789_handle= st7789_init();
     vTaskDelay(2000);
@@ -58,8 +58,11 @@ void app_main(void)
             case NOTHING_STATE:
                 i%=3;
                 break;
+            case NOTHING_STATE_2:
+                j%=3;
+                break;
             case GAME_END_STATE:
-                game_end_state(st7789_handle);
+                game_end_state(st7789_handle,player1_score,player2_score);
                 break;
         }
         vTaskDelay(100);

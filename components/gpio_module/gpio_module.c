@@ -3,6 +3,8 @@
 #include "freertos/FreeRTOS.h"
 #include "buzzer_module.h"
 #include "esp_timer.h"
+#include "timer_module.h"
+#include "fsm_states_handler.h"
 
 void gpio_init();
 void interrupts_init(States *fsm_state);
@@ -87,10 +89,21 @@ static void IRAM_ATTR IRS_BUTTON_1(void *arg) {
         initial=final;
         return;
     }
+    if (*s == NOTHING_STATE) {
+        *s = TRIGGER_STATE;
+        initial=final;
+        return;
+    }
+    if (*s == DISQUALIFIED_1_STATE) return;
+    if (*s == DISQUALIFIED_2_STATE) return;
+    if (*s == WINNER_1_STATE) return;
+    if (*s == WINNER_2_STATE) return;
     if (gpio_get_level(LED_PIN)) {
+        timer_stop(timer_handle);
         *s = WINNER_1_STATE;
     }
     else {
+        timer_stop(timer_handle);
         *s=DISQUALIFIED_1_STATE;
     }
     initial=final;
@@ -109,10 +122,21 @@ static void IRAM_ATTR IRS_BUTTON_2(void *arg) {
         initial=final;
         return;
     }
+    if (*s == NOTHING_STATE) {
+        *s = TRIGGER_STATE;
+        initial=final;
+        return;
+    }
+    if (*s == DISQUALIFIED_1_STATE) return;
+    if (*s == DISQUALIFIED_2_STATE) return;
+    if (*s == WINNER_1_STATE) return;
+    if (*s == WINNER_2_STATE) return;
     if (gpio_get_level(LED_PIN)) {
+        timer_stop(timer_handle);
         *s = WINNER_2_STATE;
     }
     else {
+        timer_stop(timer_handle);
         *s=DISQUALIFIED_2_STATE;
     }
     initial=final;
