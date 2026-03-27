@@ -112,20 +112,20 @@ static void IRAM_ATTR IRS_BUTTON_1(void *arg) {
     if (result != ESP_OK) return;
 }
 static void IRAM_ATTR IRS_BUTTON_2(void *arg) {
-    static int64_t initial=0;
+    static int64_t initial_2=0;
     int64_t final=esp_timer_get_time();
-    if ((final-initial)<MAX_DEBOUNCE_TIME) return;
+    if ((final-initial_2)<MAX_DEBOUNCE_TIME) return;
     esp_err_t result = gpio_intr_disable(BUTTON_1_PIN);
     if (result != ESP_OK) return;    
     volatile States *current_state = (volatile States*) arg;
     if (*current_state == NOTHING_STATE_3) {
         *current_state = WELCOME_STATE;
-        initial=final;
+        initial_2=final;
         return;
     }
     if (*current_state == NOTHING_STATE) {
         *current_state = TRIGGER_STATE;
-        initial=final;
+        initial_2=final;
         return;
     }
     if (*current_state == DISQUALIFIED_1_STATE) return;
@@ -139,7 +139,7 @@ static void IRAM_ATTR IRS_BUTTON_2(void *arg) {
     else {
         *current_state=DISQUALIFIED_2_STATE;
     }
-    initial=final;
+    initial_2=final;
     result = gpio_intr_enable(BUTTON_1_PIN);
     if (result != ESP_OK) return;
 }
