@@ -150,6 +150,7 @@ void st7789_wakeup(spi_device_handle_t dev_handle) {
     send_command(dev_handle, 0x36); //memory address control
     temp = 0x00;
     send_data(dev_handle,&temp, 1);
+    send_command(dev_handle,0x21); //display inversion
     send_command(dev_handle,0x29); //display on
 }
 static void st7789_set_window(spi_device_handle_t dev_handle, uint16_t xs, uint16_t xe, uint16_t ys, uint16_t ye) {

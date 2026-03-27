@@ -65,7 +65,7 @@ void disable_interrupt_2() {
 void enable_interrupt_1() {
     esp_err_t result = gpio_intr_enable(BUTTON_1_PIN);
     if (result != ESP_OK) {
-        printf("Couldn't enable interrupt on button 1! Error: %current_state\n",esp_err_to_name(result));
+        printf("Couldn't enable interrupt on button 1! Error: %s\n",esp_err_to_name(result));
         fflush(stdout);
         return;
     }
@@ -73,7 +73,7 @@ void enable_interrupt_1() {
 void enable_interrupt_2() {
     esp_err_t result = gpio_intr_enable(BUTTON_2_PIN);
     if (result != ESP_OK) {
-        printf("Couldn't enable interrupt on button 2! Error: %current_state\n",esp_err_to_name(result));
+        printf("Couldn't enable interrupt on button 2! Error: %s\n",esp_err_to_name(result));
         fflush(stdout);
         return;
     }

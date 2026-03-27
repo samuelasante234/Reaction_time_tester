@@ -24,8 +24,8 @@ static uint16_t* convert_text_pixels(uint8_t *text, int no_of_characters) {
     int k=0;
     for (int i=0; i<FONT_HEIGHT*no_of_characters; i++) {
         for (int j=FONT_WIDTH-1; j>=0;j--, k++){
-            if (*(text+get_index(i, no_of_characters))&(1<<j)) *(Overhead+k) = 0xFFFF;
-            else *(Overhead+k) =0x0000;
+            if (*(text+get_index(i, no_of_characters))&(1<<j)) *(Overhead+k) = 0x0000;
+            else *(Overhead+k) =0xFFFF;
         }
     }
     esp_err_t result = esp_cache_msync((void*) Overhead,(uint32_t)(no_of_characters)*FONT_HEIGHT*FONT_WIDTH*2,ESP_CACHE_MSYNC_FLAG_DIR_C2M|ESP_CACHE_MSYNC_FLAG_TYPE_DATA);
@@ -72,7 +72,7 @@ void clear_screen(spi_device_handle_t dev_handle) {
         return;
     }
     for (int i=0; i<(SCREEN_HEIGHT*SCREEN_WIDTH);i++) {
-        *(Overheader +i)=0x0000;
+        *(Overheader +i)=0xFFFF;
     }
     esp_err_t result = esp_cache_msync((void*) Overheader,SCREEN_HEIGHT*SCREEN_WIDTH*2,ESP_CACHE_MSYNC_FLAG_DIR_C2M|ESP_CACHE_MSYNC_FLAG_TYPE_DATA);
     if (result != ESP_OK) {
