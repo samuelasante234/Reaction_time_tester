@@ -66,7 +66,6 @@ void welcome_state(spi_device_handle_t dev_handle,States *state) {
     vTaskDelay(DELAY_2_S);
     clear_screen(dev_handle);
     vTaskDelay(DELAY_3_S);
-    //draw_characters(dev_handle,"");
     draw_characters(dev_handle, "RULES OF THE GAME!",50,10);
     vTaskDelay(DELAY_4_S);
     draw_characters(dev_handle, "This is a 2-player game", 0,27);
