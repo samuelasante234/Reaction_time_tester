@@ -33,33 +33,8 @@ void idle_state(spi_device_handle_t dev_handle, States *state) {
     timer_handle=timer1_handle();
     draw_characters(dev_handle,"SAMUEL PRESENTS...",20,112);
     vTaskDelay(DELAY_3_S);
-    /*
-    draw_characters(dev_handle,"GROUP 7 PRESENTS", 50,112);
-    vTaskDelay(DELAY_3_S);*/
     draw_characters(dev_handle,"REACTION TIME TESTER",50,112);
     vTaskDelay(DELAY_4_S);
-    /*
-    draw_characters(dev_handle,"GROUP MEMBERS", 50,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"SETH OSEI ASIEDU",20,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"SAMUEL OSEI ASANTE",20,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"BOSOMTWI SERWAA",20,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"RODDY FRIMPONG",20,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"SOLOMON",50,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"JESSICA",50,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"SAMUELLA BANNERMAN",20,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"DANIEL GYEBI",20,112);
-    vTaskDelay(DELAY_3_S);
-    draw_characters(dev_handle,"KAMIL KHADIJA",20,112);
-    vTaskDelay(DELAY_3_S);*/
-    
     clear_screen(dev_handle);
     vTaskDelay(DELAY_3_S);
     *state=WELCOME_STATE;
