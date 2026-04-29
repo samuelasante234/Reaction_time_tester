@@ -53,6 +53,6 @@ uint16_t get_time(gptimer_handle_t timer_handle) {
         fflush(stdout);
         return 0;
     }
-    uint16_t converted = (uint16_t) count;
+    uint32_t converted = (uint32_t) count;
     return converted;
 }

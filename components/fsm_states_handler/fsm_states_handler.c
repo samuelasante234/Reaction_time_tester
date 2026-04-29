@@ -117,9 +117,9 @@ void winner_1_state(spi_device_handle_t dev_handle) {
     disable_interrupt_1();
     disable_interrupt_2();
     buzzer_resume_winner();
-    uint16_t time_in_us = get_time(timer_handle);
+    uint32_t time_in_us = get_time(timer_handle);
     char str_time_in_us[30];
-    snprintf(str_time_in_us,sizeof(str_time_in_us),"Reaction time: %dus", time_in_us);
+    snprintf(str_time_in_us,sizeof(str_time_in_us),"Delay: %luus", time_in_us);
     gpio_set_level(LED_PIN, 0);
     draw_characters(dev_handle, "Player 1 wins",80,112);
     vTaskDelay(DELAY_2_S);
@@ -133,9 +133,9 @@ void winner_2_state(spi_device_handle_t dev_handle) {
     disable_interrupt_1();
     disable_interrupt_2();
     buzzer_resume_winner();
-    uint16_t time_in_us = get_time(timer_handle);
+    uint32_t time_in_us = get_time(timer_handle);
     char str_time_in_us[30];
-    snprintf(str_time_in_us,sizeof(str_time_in_us),"Reaction time: %dus", time_in_us);
+    snprintf(str_time_in_us,sizeof(str_time_in_us),"Delay: %luus", time_in_us);
     gpio_set_level(LED_PIN, 0);
     draw_characters(dev_handle, "Player 2 wins",80,112);
     vTaskDelay(DELAY_2_S);

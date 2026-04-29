@@ -7,7 +7,7 @@
 #define BUZZER_DUTY_COUNT_FOR_RESUME 127
 #define BUZZER_DUTY_COUNT_FOR_PAUSE 0
 #define HPOINT 0
-#define COUNTER_RESOLUTION 8
+#define COUNTER_RESOLUTION LEDC_TIMER_8_BIT
 
 void buzzer_init();
 void buzzer_resume_winner();
